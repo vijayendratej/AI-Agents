@@ -1,0 +1,178 @@
+{
+  "name": "word google search",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/customsearch/v1?q={{ $json.searchTerm }}&key=AIzaSyD9cY7kF1yXK33kGV5VtZqzcEZ3gxnGNBo&cx=d0048ca5bfe5a45eb\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        0
+      ],
+      "id": "3131289a-60bc-4139-a349-d43a15305beb",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        0
+      ],
+      "id": "539ae488-ade5-4491-b173-8dc756e3c4e6",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "099eca3d-a508-457e-8c01-60870244fdd0",
+              "name": "searchTerm",
+              "value": "crypto market",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -300,
+        0
+      ],
+      "id": "a50bd8fa-0430-4dc7-9c4d-93b5c1fd1fff",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# The variable 'items' is provided by n8n as a list of input items.\n# Each input item is expected to have a structure like: { \"json\": { ... } }\n\n# Initialize an empty list to hold all the htmlSnippet strings.\nsnippets = []\n\n# Loop over each item from the previous node\nfor item in items:\n    # Each item[\"json\"] should have an \"items\" key with search results (list)\n    search_results = item[\"json\"].get(\"items\", [])\n    \n    # Loop through the search results to extract \"htmlSnippet\"\n    for result in search_results:\n        snippet = result.get(\"htmlSnippet\")\n        if snippet:\n            snippets.append(snippet)\n\n# Combine all snippets into one string. You can separate them with a space or newline.\ntext_to_analyze = \" \".join(snippets)\n\n# Return the output in the required format: a list of dicts with a \"json\" key.\nreturn [{\"json\": {\"textToAnalyze\": text_to_analyze}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ],
+      "id": "c1d84da0-9f75-4858-8740-f7097fd324c2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "=Analyze the following text and extract the key topics, concepts, and important insights mentioned. Provide a concise bullet-point list of the most relevant topics. Focus on terms related to AI, automation, decision-making, and other technical or business-related aspects.\n\nText to analyze:\n{{ $json.textToAnalyze }}\n\n expected output format \n\nKey Topics:\n\n- AI agents  \n- Automation of complex tasks  \n- Multimodal information processing (text, voice, video, audio, code)  \n- Autonomous decision-making  \n- Virtual project management  \n- AI-driven customer interactions  \n- AI safety and risk evaluation  \n\n\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        380,
+        0
+      ],
+      "id": "87fa04b3-e037-4db4-8547-3e15dff08c6a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        220
+      ],
+      "id": "62f8381b-68e8-4b44-9b14-ac13d8a44759",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "xJZjrtVPj7jBQeDk",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "da0251bc-feb4-47a7-a67c-1edd61cbe157",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "664134416db826f1d171d55934a117eb4a11892f4fb1c0f47c5bcb23bfc752f0"
+  },
+  "id": "rbWJ7m8RgPTW2ujc",
+  "tags": []
+}
